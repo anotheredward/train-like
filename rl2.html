@@ -1,0 +1,119 @@
+<style>
+video#bgvid {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -100;
+    -ms-transform: translateX(-50%) translateY(-50%);
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+    background-size: cover;
+}
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  margin: 0;
+  color: #DDDDDD;
+  font-size: 6vw;
+  font-style: italic;
+}
+#myflex {
+  position: fixed;
+  display: flex;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(15,15,15,0.5);
+}
+</style>
+<div id="myflex">
+  <pre id="maze"></pre>
+</div>
+<audio id="train" loop control src="train.mp3" preload="auto"></audio>
+<audio id="wind" loop control src="wind.mp3" preload="auto"></audio>
+<video playsinline autoplay muted loop id="bgvid">
+    <source src="background.mp4" type="video/mp4">
+</video>
+<script>
+  'use strict'
+  const maze = [
+  "____|_______|_______|_____",
+  "|......|.|......|.|...T..|",
+  "( )--( ) ( )--( ) ( )--( )",
+  "=========================="
+  ]
+
+  let map = maze.map(line => line.split(''))
+  let player = {x: 1, y: 1, char: '@'}
+  let entities = [player]
+  let tiles = {
+    '.': {walkable: true},
+    '_': {walkable: true}
+  }
+
+  document.getElementById('train').volume = 1;
+  document.getElementById('wind').volume = 0;
+  document.getElementById('train').play()
+  document.getElementById('wind').play()
+
+  function render (map) {
+    let newMap = mergeEntitiesWithMap(entities, map)
+    document.getElementById('maze').innerHTML =
+    newMap.map(characters => characters.join('')).join('\n')
+  }
+
+  function mergeEntitiesWithMap(entities, map) {
+    let newMap = maze.map(line => line.split(''))
+    entities.forEach(e => newMap[e.y][e.x] = e.char)
+    return newMap
+  }
+
+  render(map)
+
+  const keyToDirection = {
+    37: {x: -1, y: 0},
+    38: {x: 0, y: -1},
+    39: {x: 1, y: 0},
+    40: {x: 0, y: 1}
+  }
+
+  document.onkeydown = function (e) {
+    const direction = keyToDirection[e.keyCode]
+    if (direction) {
+      e.preventDefault()
+      move(direction)
+    }
+  }
+
+  const addPoints = (point1, point2) =>
+  ({x: point1.x + point2.x, y: point1.y + point2.y})
+
+  function move(direction) {
+   const newPosition = addPoints(player, direction)
+   const newCharacter = map[newPosition.y][newPosition.x]
+   if (tiles[newCharacter] && tiles[newCharacter].walkable)
+    teleportEntity(player, newPosition)
+   else if (newCharacter === 'T')
+    alert("Congrats! You are a winner!")
+   if (player.y === 0) {
+     document.getElementById('train').volume = 0.6;
+     document.getElementById('wind').volume = 1;
+   } else {
+     document.getElementById('train').volume = 1;
+     document.getElementById('wind').volume = 0;
+   }
+ }
+
+ function teleportEntity (entity, {x,y}) {
+   entity.x = x
+   entity.y = y
+   render(map)
+ }
+</script>
